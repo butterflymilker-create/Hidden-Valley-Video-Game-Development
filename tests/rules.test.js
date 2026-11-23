@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canBuildFire, canCraftCanteen, canCraftStoneAxe, canCraftStonePickaxe, craftCanteen, craftStoneAxe, craftStonePickaxe, getGraphicsPreset, getMoveVector, isNearResource, isSurvivalStatLow, resolveMovement, resourceYield, startJump, stepJump } from '../src/rules.js';
+import { canBuildFire, canCraftCanteen, canCraftStoneAxe, canCraftStonePickaxe, craftCanteen, craftStoneAxe, craftStonePickaxe, getGraphicsPreset, getInventoryShortcutAction, getMoveVector, getSignalFireObjective, isNearResource, isSurvivalStatLow, resolveMovement, resourceYield, startJump, stepJump } from '../src/rules.js';
 
 test('fire recipe requires the ridge, materials, and an unlit fire', () => {
   assert.equal(canBuildFire({ wood: 3, stone: 2 }, false), false);
@@ -84,4 +84,24 @@ test('survival HUD warning starts at 25 percent and ignores invalid values', () 
   assert.equal(isSurvivalStatLow(Number.NaN), false);
   assert.equal(isSurvivalStatLow(7, 7), true);
   assert.equal(isSurvivalStatLow(7.01, 7), false);
+});
+
+test('backpack crafting shortcut responds once to C and ignores repeats or other keys', () => {
+  assert.equal(getInventoryShortcutAction('c'), 'craft');
+  assert.equal(getInventoryShortcutAction('C'), 'craft');
+  assert.equal(getInventoryShortcutAction('c', true), null);
+  assert.equal(getInventoryShortcutAction('1'), null);
+});
+
+test('signal-fire objective shows material progress and only prompts inside interaction range', () => {
+  assert.equal(
+    getSignalFireObjective({ wood: 1, stone: 0 }, false),
+    'Gather wood (1/3) and stone (0/2), then reach the ridge and press E to light the signal fire.'
+  );
+  assert.equal(
+    getSignalFireObjective({ wood: 3, stone: 1 }, true),
+    'At ridge · gather 0 wood and 1 stone, then press E.'
+  );
+  assert.equal(getSignalFireObjective({ wood: 3, stone: 2 }, true), 'Press E to light the signal fire.');
+  assert.equal(getSignalFireObjective({ wood: 3, stone: 2 }, false, true), 'Signal fire lit! Smoke marks your way out of the valley.');
 });
