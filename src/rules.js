@@ -84,3 +84,16 @@ export function resolveMovement(current, proposed, obstacles, playerRadius = 0.4
   if (!blockedAt(x, proposed.z)) z = proposed.z;
   return { x, z };
 }
+export function getInventoryShortcutAction(key, repeat = false) {
+  if (repeat) return null;
+  return String(key).toLowerCase() === 'c' ? 'craft' : null;
+}
+
+export function getSignalFireObjective(inventory, atRidge, fireLit = false) {
+  if (fireLit) return 'Signal fire lit! Smoke marks your way out of the valley.';
+  const wood = Math.max(0, Math.floor(Number.isFinite(inventory?.wood) ? inventory.wood : 0));
+  const stone = Math.max(0, Math.floor(Number.isFinite(inventory?.stone) ? inventory.stone : 0));
+  if (atRidge && canBuildFire({ wood, stone }, true)) return 'Press E to light the signal fire.';
+  if (atRidge) return `At ridge · gather ${Math.max(0, 3 - wood)} wood and ${Math.max(0, 2 - stone)} stone, then press E.`;
+  return `Gather wood (${Math.min(wood, 3)}/3) and stone (${Math.min(stone, 2)}/2), then reach the ridge and press E to light the signal fire.`;
+}
