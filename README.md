@@ -38,6 +38,6 @@ pnpm test
 pnpm build
 ```
 
-The project is automatically built and published to GitHub Pages whenever changes are pushed to `main`. The public game URL above is intended to stay the same as future versions are deployed.
+This first-person Three.js survival prototype is the canonical Hidden Valley game. After every push to `main`, GitHub Actions runs the tests and production build; a successful build is automatically published to the same GitHub Pages URL above. The game address does not change between releases.
 
 The older standalone prototypes and recovery notes are kept in `Legacy References/` and the project notes. The local Windows backup remains separate from this public repository.
