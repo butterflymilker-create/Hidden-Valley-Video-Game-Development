@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import './style.css';
-import { canBuildFire, canCraftCanteen, canCraftStoneAxe, canCraftStonePickaxe, craftCanteen, craftStoneAxe, craftStonePickaxe, getGraphicsPreset, getMoveVector, INTERACT_DISTANCE, isNearResource, isSurvivalStatLow, resolveMovement, resourceYield, startJump, stepJump } from './rules.js';
+import { canBuildFire, canCraftCanteen, canCraftStoneAxe, canCraftStonePickaxe, craftCanteen, craftStoneAxe, craftStonePickaxe, getGraphicsPreset, getInventoryShortcutAction, getMoveVector, getSignalFireObjective, INTERACT_DISTANCE, isNearResource, isSurvivalStatLow, resolveMovement, resourceYield, startJump, stepJump } from './rules.js';
 
 const canvas = document.querySelector('#scene');
 const mapCanvas = document.querySelector('#minimap');
@@ -725,12 +725,8 @@ function updateHUD() {
   const ridgeDistance = Math.hypot(state.x - ridge.x, state.z - ridge.z);
   const prompt = document.querySelector('#interactionPrompt');
   const reticle = document.querySelector('#reticle');
-  document.querySelector('#objective').textContent = state.fireLit
-    ? 'Signal fire lit! Smoke marks your way out of the valley.'
-    : ridgeDistance < 5.5
-      ? canBuildFire(state, true) ? 'Press E to light the signal fire.' : 'At the ridge · gather 3 wood and 2 stone, then press E.'
-      : 'Explore the valley. Gather 3 wood and 2 stone, then light a signal fire at the ridge.';
-  if (ridgeDistance < 4.5) prompt.textContent = state.fireLit
+  document.querySelector('#objective').textContent = getSignalFireObjective(state, ridgeDistance < 4.1, state.fireLit);
+  if (ridgeDistance < 4.1) prompt.textContent = state.fireLit
     ? 'Signal fire lit · rest nearby to recover'
     : canBuildFire(state, true) ? 'E · Light signal fire' : 'Ridge reached · 3 wood + 2 stone needed';
   else if (isNearCreek()) {
@@ -968,14 +964,20 @@ document.addEventListener('keydown', event => {
     setInventoryOpen(!inventoryOpen);
     return;
   }
-  if (!playing || inventoryOpen || typingTarget) return;
+  if (!playing || typingTarget) return;
+  if (inventoryOpen) {
+    if (getInventoryShortcutAction(key, event.repeat) === 'craft') {
+      event.preventDefault();
+      craftNextTool();
+    }
+    return;
+  }
   if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'control'].includes(key)) event.preventDefault();
   state.keys.add(key);
   if (key === 'control' && !event.repeat) {
     crouched = !crouched;
     toastMessage(crouched ? 'Crouched. Press Ctrl again to stand.' : 'Standing.');
   }
-  if (key === 'c' && !event.repeat && !document.querySelector('#inventoryPanel').hidden) craftNextTool();
   if (key === '1' && !event.repeat) equipTool('axe');
   if (key === '2' && !event.repeat) equipTool('pickaxe');
   if (key === 't' && !event.repeat && state.equippedTool) equipTool(state.equippedTool);
