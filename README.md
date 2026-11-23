@@ -1,19 +1,16 @@
-# Hidden Valley — 3D Survival Prototype
+# Hidden Valley — 3D Survival Game
 
-**Play the latest published build:** https://butterflymilker-create.github.io/Hidden-Valley-Video-Game-Development/
+**Play the current public game:** https://butterflymilker-create.github.io/Hidden-Valley-Video-Game-Development/
 
 **Source code:** https://github.com/butterflymilker-create/Hidden-Valley-Video-Game-Development
 
-This is the recovered Three.js/Vite first-person survival prototype. It is the verified working recovery copy, not confirmation that the later Roblox-like version has been recovered.
+Hidden Valley is a 3D survival game built with Three.js and Vite. The current canonical build is played from a first-person perspective.
 
-## Run locally
+In earlier conversations, “Roblox-like” referred to the game being 3D. It does **not** mean that a separate Roblox-platform version is required or that the current 3D build is a different, unrecovered project. The current public Three.js game is the intended 3D continuation of Hidden Valley.
 
-Requires Node.js 22.12+ and pnpm.
+## Current gameplay
 
-```sh
-pnpm install --frozen-lockfile
-pnpm dev
-```
+Explore the valley, collect wood, stone, and berries, craft tools and a canteen, manage food and water, shelter from cold weather, and light the signal fire on the ridge.
 
 ## Controls
 
@@ -29,15 +26,22 @@ pnpm dev
 - **I:** backpack
 - **Esc:** release mouse
 
-Explore the valley, collect wood, stone, and berries, craft tools and a canteen, manage food and water, shelter from cold weather, and light the signal fire on the ridge.
+## Run locally
 
-## Development
+Requires Node.js 22.12+ and pnpm.
+
+```sh
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+## Development checks
 
 ```sh
 pnpm test
 pnpm build
 ```
 
-This first-person Three.js survival prototype is the canonical Hidden Valley game. After every push to `main`, GitHub Actions runs the tests and production build; a successful build is automatically published to the same GitHub Pages URL above. The game address does not change between releases.
+The public GitHub repository uses `main` as its default branch. The configured GitHub Actions workflow runs tests and a production build on updates; successful changes are published to the same permanent GitHub Pages URL above. The game address does not change between releases.
 
-The older standalone prototypes and recovery notes are kept in `Legacy References/` and the project notes. The local Windows backup remains separate from this public repository.
+Keep the separate local recovery backup untouched during ordinary development. Consult the project notes for continuity and decisions, but inspect the actual code and tests before assuming a feature is implemented.
