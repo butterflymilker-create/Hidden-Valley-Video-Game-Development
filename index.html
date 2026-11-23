@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101915" />
+    <title>The Lost Valley — 3D</title>
+  </head>
+  <body>
+    <div id="game"><canvas id="scene" aria-label="First person view of the Lost Valley"></canvas>
+      <header class="brand"><strong>The Lost Valley</strong><span>3D browser prototype</span></header>
+      <section class="hud panel">
+        <div id="dayClock" class="kicker">Day 1 · 4:00 PM · Clear</div>
+        <h1>Find the high ridge</h1>
+        <p id="objective">Explore the valley. Gather 3 wood and 2 stone, then light a signal fire at the ridge.</p>
+        <div class="stats">
+          <span>Health <b id="healthValue">100%</b><i><em id="healthBar"></em></i></span>
+          <span>Stamina <b id="staminaValue">100%</b><i><em id="staminaBar"></em></i></span>
+          <span>Food <b id="foodValue">100%</b><i><em id="foodBar"></em></i></span>
+          <span>Water <b id="waterValue">100%</b><i><em id="waterBar"></em></i></span>
+          <span>Temperature <b id="temperatureValue">20°C</b><i><em id="temperatureBar"></em></i></span>
+        </div>
+        <div class="pack"><span>Wood <b id="woodValue">0</b></span><span>Stone <b id="stoneValue">0</b></span><span>Fire <b id="fireValue">Not lit</b></span></div>
+        <p class="small">Aim at berry bushes and press <kbd>E</kbd> to gather. Eat berries from your backpack; gather wood and berries to craft a canteen, then fill it at the stream.</p>
+        <button id="inventoryToggle" class="inventory-toggle" type="button" aria-expanded="false">Open backpack <kbd>I</kbd></button>
+        <section id="inventoryPanel" class="inventory-panel" aria-label="Backpack inventory" hidden>
+          <div class="inventory-heading"><strong>Backpack</strong><span id="slotCount">2 of 8 slots</span></div>
+          <div class="inventory-grid">
+            <div class="inventory-slot"><span class="item-icon wood-icon">W</span><span>Wood</span><b id="inventoryWood">0</b></div>
+            <div class="inventory-slot"><span class="item-icon stone-icon">S</span><span>Stone</span><b id="inventoryStone">0</b></div>
+            <div id="axeSlot" class="inventory-slot empty-slot">Empty</div><div id="berrySlot" class="inventory-slot empty-slot">Empty</div>
+            <div id="canteenSlot" class="inventory-slot empty-slot">Empty</div>
+            <div class="inventory-slot empty-slot">Empty</div>
+            <div id="pickaxeSlot" class="inventory-slot empty-slot">Empty</div><div class="inventory-slot empty-slot">Empty</div>
+          </div>
+          <p class="small">Your gathered materials stay in your pack when you save.</p>
+          <button id="eatBerry" class="recipe-button secondary" type="button">Eat berries</button>
+          <button id="drinkCanteen" class="recipe-button secondary" type="button">Drink stored water</button>
+          <div class="crafting-card">
+            <div class="inventory-heading"><strong>Crafting</strong><span>Field recipe</span></div>
+            <div class="recipe-row"><span>Stone axe</span><span>2 wood + 2 stone</span></div>
+            <button id="craftAxe" class="recipe-button" type="button">Craft stone axe</button>
+            <button id="equipAxe" class="recipe-button secondary" type="button" hidden>Equip stone axe (1)</button>
+            <div class="recipe-row pick-recipe"><span>Stone pickaxe</span><span>1 wood + 3 stone</span></div>
+            <button id="craftPickaxe" class="recipe-button" type="button">Craft stone pickaxe</button>
+            <button id="equipPickaxe" class="recipe-button secondary" type="button" hidden>Equip stone pickaxe (2)</button>
+            <div class="recipe-row pick-recipe"><span>Bark canteen</span><span>3 wood + 2 berries · stores one drink</span></div>
+            <button id="craftCanteen" class="recipe-button" type="button">Craft bark canteen</button>
+            <div class="recipe-row pick-recipe"><span>Lean-to shelter</span><span>6 wood + 2 stone</span></div>
+            <button id="buildShelter" class="recipe-button" type="button">Build shelter (H)</button>
+            <button id="packShelter" class="recipe-button secondary" type="button" hidden>Pack shelter (H)</button>
+            <p class="small">Press C to craft while the backpack is open. Press 1 or 2 to equip a tool, T to put it away, or H to build or pack your shelter.</p>
+          </div>
+        </section>
+        <details class="settings-card">
+          <summary>Graphics settings</summary>
+          <label for="qualitySelect">Quality</label>
+          <select id="qualitySelect">
+            <option value="low">Low · smoother performance</option>
+            <option value="balanced">Balanced · recommended</option>
+            <option value="high">High · sharper shadows</option>
+          </select>
+        </details>
+      </section>
+      <canvas id="minimap" width="180" height="130" aria-label="Valley minimap"></canvas>
+      <div id="reticle" aria-hidden="true"><span></span></div>
+      <div id="interactionPrompt" class="interaction-prompt" aria-live="polite" hidden></div>
+        <div class="controls">WASD move <b>·</b> Mouse look <b>·</b> Space jump <b>·</b> Ctrl toggle crouch <b>·</b> Shift jog <b>·</b> E gather / use stream <b>·</b> 1/2 tools <b>·</b> H shelter <b>·</b> I backpack <b>·</b> Esc release</div>
+      <div id="toast" role="status" aria-live="polite"></div>
+      <div id="start" class="start"><div class="start-card"><span id="startKicker" class="kicker">A quiet valley. A long way out.</span><h2 id="startTitle">Make a signal that can be seen.</h2><p id="startMessage">Walk the valley, collect what you need, and climb to the ridge.</p><button id="enter">Enter valley</button><p id="startHint" class="small">WASD to walk · mouse to look · Space to jump · Ctrl toggles crouch · Shift to jog · E to interact · I for backpack</p></div></div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

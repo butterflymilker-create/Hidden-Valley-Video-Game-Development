@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Lost Valley — Field Update</title>
+<style>
+:root{color-scheme:dark;--ink:#e8eedf;--muted:#a9b5a2;--panel:#17231f;--line:#526452;--gold:#e6bd72;--green:#99c77b}
+*{box-sizing:border-box}body{margin:0;background:#101916;color:var(--ink);font:15px/1.45 system-ui,Segoe UI,sans-serif;min-height:100vh;display:grid;place-items:center;padding:20px}
+.shell{width:min(1080px,100%);display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px}.game{position:relative;background:#263a2f;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 18px 60px #0008}.top{position:absolute;z-index:2;left:16px;top:14px;text-shadow:0 2px 8px #000}.top h1{font:600 21px Georgia,serif;margin:0}.top p{margin:3px 0;color:#d5dfcf;font-size:13px}.canvas-wrap{height:min(72vh,650px);min-height:440px}canvas{display:block;width:100%;height:100%;image-rendering:auto}.side{background:var(--panel);border:1px solid #39483d;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}h2{font:600 19px Georgia,serif;margin:0}.card{background:#202e28;border:1px solid #3b4d40;border-radius:10px;padding:12px}.card h3{margin:0 0 9px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#bbc8b8}.meter{margin:9px 0}.meter-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}.track{height:8px;background:#101915;border-radius:8px;overflow:hidden}.fill{height:100%;background:var(--green);transition:width .2s}.fill.warn{background:#d9a65e}.inventory{display:grid;grid-template-columns:1fr auto;gap:7px;font-size:13px}.inventory span:nth-child(even){color:var(--gold)}button{background:#526a4d;color:white;border:1px solid #78916f;border-radius:8px;padding:10px 12px;font:600 13px system-ui;cursor:pointer;text-align:left}button:hover{background:#637f5a}button:disabled{opacity:.42;cursor:not-allowed}.note{color:var(--muted);font-size:12px}.status{min-height:40px;color:#d9e3d5;font-size:13px}.controls{display:flex;gap:8px}.controls button{flex:1;text-align:center}.footer{margin-top:auto;color:#809082;font-size:11px}.mobile{display:none}
+@media(max-width:760px){body{padding:10px}.shell{grid-template-columns:1fr}.canvas-wrap{height:55vh;min-height:350px}.side{display:grid;grid-template-columns:1fr 1fr}.side>.eyebrow,.side>h2,.status,.footer{grid-column:1/-1}.mobile{display:block}.top{left:12px;top:10px}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section class="game" aria-label="Playable Lost Valley exploration area">
+    <div class="top"><h1>The Lost Valley</h1><p>Field Update · Find the ridge and light a signal fire</p></div>
+    <div class="canvas-wrap"><canvas id="world" aria-label="Top down wilderness map"></canvas></div>
+  </section>
+  <aside class="side">
+    <div class="eyebrow">Day 1 · Late afternoon</div><h2>Stay alive. Find a way out.</h2>
+    <div class="card"><h3>Condition</h3>
+      <div class="meter"><div class="meter-label"><span>Health</span><span id="healthText">100%</span></div><div class="track"><div id="health" class="fill" style="width:100%"></div></div></div>
+      <div class="meter"><div class="meter-label"><span>Stamina</span><span id="staminaText">100%</span></div><div class="track"><div id="stamina" class="fill" style="width:100%"></div></div></div>
+    </div>
+    <div class="card"><h3>Pack</h3><div class="inventory"><span>Wood</span><span id="wood">0</span><span>Stone</span><span id="stone">0</span><span>Signal fire</span><span id="fire">Not built</span></div></div>
+    <div class="card"><h3>Field actions</h3><button id="gather">Gather nearby materials</button><p class="note">Gathering uses stamina. Move with WASD or arrow keys; explore the clearing for materials.</p><button id="craft" disabled>Build signal fire (3 wood + 2 stone)</button></div>
+    <div class="status" id="status" aria-live="polite">The valley is quiet. The high ground to the east may carry a signal.</div>
+    <div class="controls"><button id="reset">Restart</button><button id="help">Controls</button></div>
+    <div class="footer">Original, self-contained browser prototype. No external game assets.</div>
+  </aside>
+</main>
+<script>
+(()=>{
+const c=document.querySelector('#world'),ctx=c.getContext('2d'),status=document.querySelector('#status');
+const state={x:0,y:0,wood:0,stone:0,health:100,stamina:100,fire:false,keys:{},trees:[],rocks:[],ridge:{x:0,y:0}};
+function resize(){const r=c.getBoundingClientRect(),d=devicePixelRatio||1;c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);ctx.setTransform(d,0,0,d,0,0);seed();draw()}
+function seed(){let s=7331;const rand=()=>((s=(s*1664525+1013904223)>>>0)/4294967296);state.trees=[];state.rocks=[];for(let i=0;i<36;i++){let x=(rand()-.5)*1200,y=(rand()-.5)*1000;if(Math.hypot(x,y)>100)state.trees.push({x,y,r:14+rand()*12})}for(let i=0;i<20;i++){let x=(rand()-.5)*1000,y=(rand()-.5)*850;if(Math.hypot(x,y)>80)state.rocks.push({x,y,r:5+rand()*5})}state.ridge={x:320,y:-230}}
+function draw(){const w=c.clientWidth,h=c.clientHeight;ctx.clearRect(0,0,w,h);ctx.fillStyle='#526548';ctx.fillRect(0,0,w,h);let ox=w/2-state.x,oy=h/2-state.y;
+// patchy ground and winding creek
+for(let i=0;i<90;i++){let x=(i*137%1200)-600,y=(i*263%1000)-500;ctx.fillStyle=i%3?'#5d704c':'#687751';ctx.beginPath();ctx.ellipse(x+ox,y+oy,20,7,(i%8)/4,0,Math.PI*2);ctx.fill()}
+ctx.strokeStyle='#597d83';ctx.lineWidth=34;ctx.beginPath();ctx.moveTo(-700+ox,190+oy);ctx.bezierCurveTo(-250+ox,100+oy,20+ox,300+oy,650+ox,150+oy);ctx.stroke();ctx.strokeStyle='#86a2a0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-700+ox,177+oy);ctx.bezierCurveTo(-250+ox,87+oy,20+ox,287+oy,650+ox,137+oy);ctx.stroke();
+// ridge landmark
+let rx=state.ridge.x+ox,ry=state.ridge.y+oy;ctx.fillStyle='#777f70';ctx.beginPath();ctx.moveTo(rx-92,ry+38);ctx.lineTo(rx-35,ry-55);ctx.lineTo(rx+6,ry-5);ctx.lineTo(rx+38,ry-75);ctx.lineTo(rx+102,ry+38);ctx.closePath();ctx.fill();ctx.fillStyle='#c7c7ad';ctx.beginPath();ctx.moveTo(rx-35,ry-55);ctx.lineTo(rx-18,ry-28);ctx.lineTo(rx-48,ry-34);ctx.closePath();ctx.fill();ctx.fillStyle='#f1d696';ctx.font='12px system-ui';ctx.fillText('HIGH RIDGE',rx-39,ry+55);
+for(const t of state.trees){let x=t.x+ox,y=t.y+oy;if(x<-30||x>w+30||y<-40||y>h+40)continue;ctx.fillStyle='#3e4c35';ctx.fillRect(x-3,y+2,6,12);ctx.fillStyle='#263e30';ctx.beginPath();ctx.arc(x,y,t.r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#607450';ctx.beginPath();ctx.arc(x-4,y-4,t.r*.55,0,Math.PI*2);ctx.fill()}
+for(const p of state.rocks){let x=p.x+ox,y=p.y+oy;if(x<0||x>w||y<0||y>h)continue;ctx.fillStyle='#9a9d8d';ctx.beginPath();ctx.ellipse(x,y,p.r,p.r*.7,-.4,0,Math.PI*2);ctx.fill()}
+// player and campfire
+if(state.fire){ctx.fillStyle='#3d3023';ctx.beginPath();ctx.arc(ox+state.x,oy+state.y,12,0,7);ctx.fill();ctx.fillStyle='#fa9e46';ctx.beginPath();ctx.arc(ox+state.x,oy+state.y,6+Math.sin(Date.now()/120)*2,0,7);ctx.fill()}
+ctx.fillStyle='#e4d1a2';ctx.beginPath();ctx.arc(w/2,h/2,9,0,7);ctx.fill();ctx.strokeStyle='#29382d';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#18261f';ctx.fillRect(w-144,14,124,33);ctx.fillStyle='#e4e9dc';ctx.font='12px system-ui';ctx.fillText(`Map  ${Math.round(state.x/10)}, ${Math.round(state.y/10)}`,w-132,35);
+}
+function updateUI(){for(const k of ['wood','stone'])document.getElementById(k).textContent=state[k];document.getElementById('fire').textContent=state.fire?'Lit':'Not built';for(const k of ['health','stamina']){document.getElementById(k).style.width=state[k]+'%';document.getElementById(k+'Text').textContent=Math.round(state[k])+'%'}document.getElementById('stamina').classList.toggle('warn',state.stamina<30);document.getElementById('craft').disabled=state.fire||state.wood<3||state.stone<2}
+function gather(){if(state.stamina<12){status.textContent='You are exhausted. Pause a moment to catch your breath.';return}state.stamina=Math.max(0,state.stamina-12);let gotW=0,gotS=0;for(let i=0;i<state.trees.length&&gotW<2;i++){if(Math.hypot(state.trees[i].x-state.x,state.trees[i].y-state.y)<115){state.trees.splice(i--,1);gotW++}}for(let i=0;i<state.rocks.length&&gotS<2;i++){if(Math.hypot(state.rocks[i].x-state.x,state.rocks[i].y-state.y)<115){state.rocks.splice(i--,1);gotS++}}if(!gotW&&!gotS){gotW=1;gotS=1}state.wood+=gotW;state.stone+=gotS;status.textContent=`You gathered ${gotW} wood and ${gotS} stone. Keep an eye on your stamina.`;updateUI();draw()}
+function move(){let dx=0,dy=0;if(state.keys.w||state.keys.ArrowUp)dy--;if(state.keys.s||state.keys.ArrowDown)dy++;if(state.keys.a||state.keys.ArrowLeft)dx--;if(state.keys.d||state.keys.ArrowRight)dx++;if(dx||dy){let n=Math.hypot(dx,dy);state.x+=dx/n*3;state.y+=dy/n*3;state.stamina=Math.max(0,state.stamina-.035);if(state.stamina===0)state.health=Math.max(0,state.health-.01);if(!state.fire&&Math.hypot(state.x-state.ridge.x,state.y-state.ridge.y)<62)status.textContent='You reached the ridge. Build a signal fire here to mark the valley.';updateUI();draw()}else{state.stamina=Math.min(100,state.stamina+.035);updateUI()}requestAnimationFrame(move)}
+document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();state.keys[e.key.length===1?e.key.toLowerCase():e.key]=true});document.addEventListener('keyup',e=>state.keys[e.key.length===1?e.key.toLowerCase():e.key]=false);
+document.querySelector('#gather').onclick=gather;document.querySelector('#craft').onclick=()=>{if(state.wood>=3&&state.stone>=2&&!state.fire){state.wood-=3;state.stone-=2;state.fire=true;status.textContent='Signal fire lit! Smoke rises above the trees. You have marked a way out of the valley.';updateUI();draw()}};
+document.querySelector('#help').onclick=()=>status.textContent='Move with WASD or arrow keys. Gather materials near trees and rocks, then reach the marked ridge and build your signal fire.';
+document.querySelector('#reset').onclick=()=>{state.x=0;state.y=0;state.wood=0;state.stone=0;state.health=100;state.stamina=100;state.fire=false;status.textContent='The valley is quiet. The high ground to the east may carry a signal.';seed();updateUI();draw()};
+new ResizeObserver(resize).observe(c);updateUI();requestAnimationFrame(move);
+})();
+</script>
+</body>
+</html>

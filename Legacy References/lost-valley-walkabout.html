@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Lost Valley — Walkabout</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111a16;color:#f0f0e8;font:14px/1.45 system-ui,Segoe UI,sans-serif}.stage{position:relative;width:100vw;height:100vh;overflow:hidden;background:#9eb4ac}canvas{display:block;width:100%;height:100%}.hud{position:absolute;inset:0;pointer-events:none;text-shadow:0 2px 5px #142018}.brand{position:absolute;left:24px;top:20px}.brand b{font:600 23px Georgia,serif}.brand div{color:#e2e7d9;font-size:12px}.panel{position:absolute;top:20px;right:20px;width:250px;padding:14px 16px;border:1px solid #d6dac044;border-radius:12px;background:#14221dcc;backdrop-filter:blur(8px)}.panel h2{font:600 17px Georgia,serif;margin:0 0 8px}.panel p{margin:5px 0;color:#e0e7da;font-size:12px}.task{color:#eed39b!important}.hint{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);padding:12px 17px;border-radius:10px;background:#102018cc;text-align:center;max-width:min(420px,85vw);font-size:13px;transition:opacity .4s}.bottom{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);padding:9px 14px;border-radius:9px;background:#14221dcc;color:#e0e7da;font-size:12px;white-space:nowrap}.cross{position:absolute;left:50%;top:50%;width:13px;height:13px;transform:translate(-50%,-50%);opacity:.8}.cross:before,.cross:after{content:"";position:absolute;background:#f3f0dc;box-shadow:0 0 3px #1b241d}.cross:before{width:1px;height:13px;left:6px}.cross:after{height:1px;width:13px;top:6px}.toast{position:absolute;left:50%;bottom:70px;transform:translateX(-50%);background:#17241edb;padding:9px 14px;border-radius:8px;opacity:0;transition:opacity .2s}.toast.show{opacity:1}.bar{height:5px;background:#08120e;border-radius:5px;margin-top:5px}.bar i{display:block;height:100%;width:100%;background:#b4ce89;border-radius:5px}.start{pointer-events:auto;position:absolute;inset:0;display:grid;place-items:center;background:#111a1688}.start button{border:1px solid #d8dfc7;border-radius:10px;background:#263c2d;color:#f7f4e6;padding:13px 19px;font:600 15px system-ui;cursor:pointer}.start button:hover{background:#39533e}.small{opacity:.78;font-size:11px!important}.fire{color:#ffcf80!important}
+</style>
+</head>
+<body><main class="stage"><canvas id="view"></canvas>
+<div class="hud"><div class="brand"><b>The Lost Valley</b><div>Walkabout prototype · original low-poly inspired wilderness</div></div>
+<section class="panel"><h2>Find the high ridge</h2><p class="task" id="objective">Explore the clearing and reach the ridge to the east.</p><p id="inventory">Pack · 0 wood · 0 stone</p><p id="staminaText">Stamina · 100%</p><div class="bar"><i id="staminaBar"></i></div><p class="small">Press E near a resource to collect it. Gather 3 wood and 2 stone to light a signal fire at the ridge.</p></section>
+<div class="cross"></div><div class="hint" id="hint">Click <b>Enter valley</b> to capture the mouse.<br>WASD to walk · mouse to look · Shift to jog · E to gather</div><div class="bottom">WASD walk &nbsp;·&nbsp; Mouse look &nbsp;·&nbsp; Shift jog &nbsp;·&nbsp; E interact &nbsp;·&nbsp; Esc release mouse</div><div class="toast" id="toast"></div></div>
+<div class="start" id="start"><button id="enter">Enter valley</button></div></main>
+<script>
+(()=>{
+const canvas=document.querySelector('#view'),cx=canvas.getContext('2d'),keys=new Set(),hint=document.querySelector('#hint'),toast=document.querySelector('#toast');
+const p={x:0,z:0,yaw:0,pitch:0,stamina:100,wood:0,stone:0,fire:false};
+const world=[];let fireObj={x:9,z:-14};
+// Fixed seeded layout: every object is drawn from original geometric shapes.
+let seed=260624;const rand=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
+for(let i=0;i<66;i++){let x=(rand()-.5)*54,z=(rand()-.5)*62;if(Math.hypot(x,z)<5)continue;world.push({type:rand()<.77?'tree':'rock',x,z,size:rand()*.65+.7,taken:false})}
+world.push({type:'ridge',x:9,z:-14,size:1,taken:false});
+function resize(){const d=devicePixelRatio||1;canvas.width=Math.round(innerWidth*d);canvas.height=Math.round(innerHeight*d);cx.setTransform(d,0,0,d,0,0)}addEventListener('resize',resize);resize();
+function project(x,y,z){let dx=x-p.x,dz=z-p.z,c=Math.cos(p.yaw),s=Math.sin(p.yaw),forward=-dx*s-dz*c,side=dx*c-dz*s;if(forward<.2)return null;let focal=innerWidth*.82,scale=focal/forward;return{x:innerWidth/2+side*scale,y:innerHeight*.54+(1.45-y)*scale-p.pitch*innerHeight*.5,scale,forward}}
+function polygon(points,color){cx.fillStyle=color;cx.beginPath();points.forEach((q,i)=>i?cx.lineTo(q.x,q.y):cx.moveTo(q.x,q.y));cx.closePath();cx.fill()}
+function draw(){let w=innerWidth,h=innerHeight;let sky=cx.createLinearGradient(0,0,0,h*.7);sky.addColorStop(0,'#91aaa4');sky.addColorStop(.65,'#c6c2a1');sky.addColorStop(1,'#77866d');cx.fillStyle=sky;cx.fillRect(0,0,w,h);
+// distant valley walls, layered ridgelines
+polygon([{x:0,y:h*.48},{x:w*.14,y:h*.29},{x:w*.27,y:h*.43},{x:w*.42,y:h*.25},{x:w*.56,y:h*.42},{x:w*.74,y:h*.28},{x:w,y:h*.4},{x:w,y:h*.7},{x:0,y:h*.7}],'#64766a');
+polygon([{x:0,y:h*.53},{x:w*.18,y:h*.39},{x:w*.33,y:h*.52},{x:w*.54,y:h*.36},{x:w*.7,y:h*.5},{x:w*.87,y:h*.34},{x:w,y:h*.48},{x:w,y:h*.74},{x:0,y:h*.74}],'#71836b');
+// ground plane rendered in perspective bands
+for(let i=0;i<14;i++){let y=h*.52+i*i*h*.0035;cx.fillStyle=i%2?'#586d49':'#617650';cx.fillRect(0,y,w,h/14+4)}
+// creek as a wandering set of perspective segments
+let creek=[[-20,7],[-12,4],[-5,3],[1,5],[9,10],[20,14],[28,16]];cx.strokeStyle='#718f8c';cx.lineWidth=26;cx.lineCap='round';cx.beginPath();creek.forEach(([x,z],i)=>{let q=project(x,0,z);if(!q)return;i?cx.lineTo(q.x,q.y):cx.moveTo(q.x,q.y)});cx.stroke();cx.strokeStyle='#a3b4a8';cx.lineWidth=2;cx.stroke();
+// small ground flecks add a readable sense of scale
+for(let i=0;i<115;i++){let x=(i*19%61)-30,z=(i*37%70)-34;if(z<1)continue;let q=project(x,0,z);if(q&&q.x>-5&&q.x<w+5){cx.fillStyle=i%3?'#85916a':'#87917a';cx.fillRect(q.x,q.y,Math.max(1,q.scale*.025),Math.max(1,q.scale*.018))}}
+let visible=world.filter(o=>!o.taken).map(o=>({o,q:project(o.x,0,o.z)})).filter(v=>v.q&&v.q.x>-160&&v.q.x<w+160).sort((a,b)=>b.q.forward-a.q.forward);
+for(const {o,q} of visible){let sc=Math.min(1000,q.scale)*o.size;if(o.type==='tree'){
+let trunkW=Math.max(2,sc*.085),base=q.y;cx.fillStyle='#514435';cx.fillRect(q.x-trunkW/2,base-sc*.95,trunkW,sc*.95);
+polygon([{x:q.x,y:base-sc*2.8},{x:q.x-sc*.54,y:base-sc*.93},{x:q.x+sc*.54,y:base-sc*.93}],'#304b38');polygon([{x:q.x,y:base-sc*2.25},{x:q.x-sc*.43,y:base-sc*.75},{x:q.x+sc*.43,y:base-sc*.75}],'#476744');polygon([{x:q.x,y:base-sc*1.8},{x:q.x-sc*.31,y:base-sc*.57},{x:q.x+sc*.31,y:base-sc*.57}],'#658151');
+}else if(o.type==='rock'){cx.fillStyle='#969988';cx.beginPath();cx.ellipse(q.x,q.y-sc*.12,sc*.38,sc*.24,0,0,Math.PI*2);cx.fill();cx.fillStyle='#b0ae99';cx.beginPath();cx.ellipse(q.x-sc*.1,q.y-sc*.2,sc*.22,sc*.12,-.2,0,Math.PI*2);cx.fill();
+}else{polygon([{x:q.x-sc*1.3,y:q.y},{x:q.x-sc*.55,y:q.y-sc*1.25},{x:q.x-sc*.1,y:q.y-sc*.64},{x:q.x+sc*.44,y:q.y-sc*1.55},{x:q.x+sc*1.35,y:q.y}], '#727c70');polygon([{x:q.x-sc*.55,y:q.y-sc*1.25},{x:q.x-sc*.22,y:q.y-sc*.78},{x:q.x-sc*.82,y:q.y-sc*.91}],'#d0d0b7');cx.fillStyle='#f0d295';cx.font=`${Math.max(10,Math.min(16,sc*.3))}px system-ui`;cx.textAlign='center';cx.fillText('HIGH RIDGE',q.x,q.y+14)}}
+if(p.fire){let f=project(fireObj.x,0,fireObj.z);if(f){cx.fillStyle='#352b21';cx.beginPath();cx.ellipse(f.x,f.y,Math.max(7,f.scale*.18),Math.max(3,f.scale*.07),0,0,7);cx.fill();cx.fillStyle='#f58b40';cx.beginPath();cx.ellipse(f.x,f.y-Math.max(7,f.scale*.18),Math.max(3,f.scale*.07),Math.max(6,f.scale*.2),0,0,7);cx.fill()}}
+// subtle vignette and horizon warmth
+let vg=cx.createRadialGradient(w/2,h*.53,h*.12,w/2,h*.53,h*.78);vg.addColorStop(.5,'#10160f00');vg.addColorStop(1,'#11191399');cx.fillStyle=vg;cx.fillRect(0,0,w,h);updateUI()}
+function closest(){let best=null,dist=Infinity;for(const o of world){if(o.taken||o.type==='ridge')continue;let d=Math.hypot(o.x-p.x,o.z-p.z);if(d<dist){dist=d;best=o}}let rd=Math.hypot(fireObj.x-p.x,fireObj.z-p.z);return {obj:best,dist,ridge:rd}}
+function showToast(t){toast.textContent=t;toast.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove('show'),2100)}
+function interact(){let c=closest();if(p.fire){showToast('The signal fire is already burning.');return}if(c.ridge<2.7){if(p.wood>=3&&p.stone>=2){p.wood-=3;p.stone-=2;p.fire=true;document.querySelector('#objective').textContent='Signal lit! Smoke rises above the valley.';showToast('You lit a signal fire on the ridge.');}else showToast('At the ridge. Gather 3 wood and 2 stone first.');}
+else if(c.obj&&c.dist<2.5){c.obj.taken=true;if(c.obj.type==='tree'){p.wood++;showToast('Collected 1 wood.')}else{p.stone++;showToast('Collected 1 stone.')}}else showToast('Nothing close enough to gather. Look for trees, stones, or the high ridge.')}
+function updateUI(){document.querySelector('#inventory').textContent=`Pack · ${p.wood} wood · ${p.stone} stone`;document.querySelector('#staminaText').textContent=`Stamina · ${Math.round(p.stamina)}%`;document.querySelector('#staminaBar').style.width=p.stamina+'%';if(!p.fire&&Math.hypot(fireObj.x-p.x,fireObj.z-p.z)<3)document.querySelector('#objective').textContent=p.wood>=3&&p.stone>=2?'Press E to light the signal fire.':'At the ridge · collect 3 wood and 2 stone, then press E.'}
+let last=performance.now();function tick(now){let dt=Math.min(.05,(now-last)/1000);last=now;let f=(keys.has('w')||keys.has('arrowup')?1:0)-(keys.has('s')||keys.has('arrowdown')?1:0),side=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),moving=f||side,speed=keys.has('shift')&&p.stamina>0?5.2:3.2;if(moving){let n=Math.hypot(f,side);f/=n;side/=n;let fx=-Math.sin(p.yaw),fz=-Math.cos(p.yaw),rx=Math.cos(p.yaw),rz=-Math.sin(p.yaw);let nx=p.x+(fx*f+rx*side)*speed*dt,nz=p.z+(fz*f+rz*side)*speed*dt;if(Math.abs(nx)<38&&Math.abs(nz)<42){p.x=nx;p.z=nz}if(speed>4)p.stamina=Math.max(0,p.stamina-16*dt);else p.stamina=Math.max(0,p.stamina-4*dt)}else p.stamina=Math.min(100,p.stamina+11*dt);draw();requestAnimationFrame(tick)}requestAnimationFrame(tick);
+document.addEventListener('keydown',e=>{let k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();keys.add(k);if(k==='e'&&!e.repeat)interact()});document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+let playing=false,wasLocked=false,dragging=false,lastMouseX=0,lastMouseY=0;
+function hideStart(){document.querySelector('#start').style.display='none';hint.style.opacity='0';setTimeout(()=>hint.style.display='none',500)}
+function turnView(dx,dy){p.yaw+=dx*.0025;p.pitch=Math.max(-.65,Math.min(.65,p.pitch+dy*.002))}
+document.querySelector('#enter').onclick=()=>{playing=true;hideStart();if(canvas.requestPointerLock){try{const result=canvas.requestPointerLock();result?.catch?.(()=>{})}catch(_){/* Drag look remains available if pointer lock is unavailable. */}}};
+document.addEventListener('pointerlockchange',()=>{const locked=document.pointerLockElement===canvas;if(wasLocked&&!locked){playing=false;dragging=false;document.querySelector('#start').style.display='grid';document.querySelector('#enter').textContent='Resume valley'}if(locked){playing=true;hideStart()}wasLocked=locked});
+canvas.addEventListener('mousedown',e=>{if(playing&&document.pointerLockElement!==canvas){dragging=true;lastMouseX=e.clientX;lastMouseY=e.clientY}});
+document.addEventListener('mouseup',()=>dragging=false);
+document.addEventListener('mousemove',e=>{if(document.pointerLockElement===canvas){turnView(e.movementX,e.movementY)}else if(playing&&dragging){turnView(e.clientX-lastMouseX,e.clientY-lastMouseY);lastMouseX=e.clientX;lastMouseY=e.clientY}});
+draw();
+})();
+</script></body></html>
